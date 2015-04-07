@@ -1,0 +1,10 @@
+[Unit]
+Description=zorp
+After=network.target
+
+[Service]
+EnvironmentFile=-/etc/sysconfig/zorp
+ExecStart=/usr/lib/zorp/zorp -u root -g root -a zorp_http -p /etc/zorp/policy.py.http.sample -l
+
+[Install]
+WantedBy=multi-user.target

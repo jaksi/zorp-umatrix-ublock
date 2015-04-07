@@ -1,0 +1,52 @@
+#!/bin/bash
+
+set -e
+
+NAME='zorp'
+IP='192.168.0.137'
+
+lxc-create -n ${NAME} -t fedora -- -R 21
+
+cat >> "/var/lib/lxc/${NAME}/config" <<EOD
+lxc.network.type = veth
+lxc.network.flags = up
+lxc.network.link = br0
+lxc.network.name = eth0
+lxc.network.ipv4 = ${IP}
+EOD
+
+lxc-start -n ${NAME}
+sleep 5
+lxc-attach -n ${NAME} -- <<EOD
+yum -y install git libtool gcc-c++ zlib-devel openssl-devel glib2-devel make gperf python-devel py-radix pyOpenSSL python-pydns python-pip
+pip install prctl
+
+cd /usr/src
+
+git clone https://github.com/balabit/libzorpll.git
+cd libzorpll
+git checkout 6.0.0.0
+./autogen.sh
+./configure --prefix=/usr
+make
+make install
+cd ..
+
+git clone https://github.com/balabit/zorp.git
+cd zorp
+git checkout 6.0.0
+./autogen.sh
+./configure --prefix=/usr
+make
+make install
+cd ..
+
+git clone https://github.com/balabit/kzorp.git
+cd kzorp
+git checkout 6.0.0
+autoreconf -i
+./configure --prefix=/usr
+make
+make install
+cd ..
+EOD

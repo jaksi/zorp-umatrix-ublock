@@ -49,4 +49,11 @@ autoreconf -i
 make
 make install
 cd ..
+
+git clone https://github.com/jaksi/zorp-umatrix-ublock
+cp zorp-umatrix-ublock/systemd-service/zorp.service /etc/systemd/system/
+cp zorp-umatrix-ublock/systemd-service/zorp /etc/sysconfig/
+
+systemctl enable zorp
+systemctl start zorp
 EOD

@@ -4,7 +4,7 @@ After=network.target
 
 [Service]
 EnvironmentFile=-/etc/sysconfig/zorp
-ExecStart=/usr/lib/zorp/zorp -u root -g root -a zorp_http -p /etc/zorp/policy_http.py -l
+ExecStart=/usr/lib/zorp/zorp -u root -g root -a zorp_uMatrix_uBlock -p /etc/zorp/policy_uMatrix_uBlock.py -l
 
 [Install]
 WantedBy=multi-user.target

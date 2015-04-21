@@ -8,7 +8,7 @@ from Zorp.Http import *
 InetZone(name="internet", addrs=["0.0.0.0/0"])
 
 
-class uMatrix_uBlock_Proxy(HttpProxyNonTransparent):
+class uProxy(HttpProxyNonTransparent):
     user_agents = [
         'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:36.0) Gecko/20100101 Firefox/36.0',
         'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.101 Safari/537.36',
@@ -29,15 +29,15 @@ class uMatrix_uBlock_Proxy(HttpProxyNonTransparent):
         now = datetime.now()
         src = self.session.client_address.ip_s
 
-        user_agent, last_changed = uMatrix_uBlock_Proxy.current_user_agents.get(src, (None, None))
-        if not user_agent or now - last_changed > uMatrix_uBlock_Proxy.user_agent_interval:
-            user_agent = random.choice(uMatrix_uBlock_Proxy.user_agents)
-            uMatrix_uBlock_Proxy.current_user_agents[src] = (user_agent, now)
+        user_agent, last_changed = uProxy.current_user_agents.get(src, (None, None))
+        if not user_agent or now - last_changed > uProxy.user_agent_interval:
+            user_agent = random.choice(uProxy.user_agents)
+            uProxy.current_user_agents[src] = (user_agent, now)
         self.setRequestHeader('User-Agent', user_agent)
 
         return HTTP_REQ_ACCEPT
 
 
-def zorp_uMatrix_uBlock():
-        Service("uMatrix_uBlock", uMatrix_uBlock_Proxy, router=InbandRouter())
-        Listener(SockAddrInet("0.0.0.0", 8080), "uMatrix_uBlock")
+def zorp_uProxy():
+        Service("uProxy", uProxy, router=InbandRouter())
+        Listener(SockAddrInet("0.0.0.0", 8080), "uProxy")

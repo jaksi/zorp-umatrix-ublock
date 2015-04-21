@@ -17,9 +17,6 @@ uProxy.user_agent_interval = timedelta(minutes=2)
 # Block all hyperlink auditing attempts
 uProxy.block_hyperlink_auditing = True
 
-# Strict HTTPS: forbid mixed content
-uProxy.strict_https_experimental = True
-
 # Spoof HTTP referrer string of third-party requests
 uProxy.spoof_referer = True
 

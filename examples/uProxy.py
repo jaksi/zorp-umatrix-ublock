@@ -9,7 +9,6 @@ class uProxy(HttpProxyNonTransparent):
     user_agents = []
     user_agent_interval = timedelta(minutes=5)
     block_hyperlink_auditing = False
-    strict_https_experimental = False
     spoof_referer = False
 
     _current_user_agents = {} # a dict mapping IP addresses to tuples containing the current user agent associated with them, and the last time they were changed
@@ -28,11 +27,6 @@ class uProxy(HttpProxyNonTransparent):
         if uProxy.block_hyperlink_auditing:
             if method == 'POST' and self.getRequestHeader('Content-Type') == 'text/ping':
                 proxyLog(self, '', 0, 'Hyperlink auditing attempt to %s rejected' % host)
-                return HTTP_REQ_REJECT
-
-        if uProxy.strict_https_experimental:
-            if 'text/html' not in self.getRequestHeader('Accept') and referer and referer.startswith('https'):
-                proxyLog(self, '', 0, 'Mixed content request to %s rejected' % host)
                 return HTTP_REQ_REJECT
 
         if uProxy.spoof_referer:

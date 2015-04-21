@@ -42,10 +42,10 @@ class uProxy(HttpProxyNonTransparent):
         src = self.session.client_address.ip_s
 
         if uProxy.user_agents:
-            user_agent, last_changed = uProxy.current_user_agents.get(src, (None, None))
+            user_agent, last_changed = uProxy._current_user_agents.get(src, (None, None))
             if not user_agent or now - last_changed > uProxy.user_agent_interval:
                 user_agent = random.choice(uProxy.user_agents)
-                uProxy.current_user_agents[src] = (user_agent, now)
+                uProxy._current_user_agents[src] = (user_agent, now)
                 # TODO: log
             self.setRequestHeader('User-Agent', user_agent)
 

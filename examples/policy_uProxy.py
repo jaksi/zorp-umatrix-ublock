@@ -17,6 +17,12 @@ uProxy.user_agent_interval = timedelta(minutes=2)
 # Block all hyperlink auditing attempts
 uProxy.block_hyperlink_auditing = True
 
+# Strict HTTPS: forbid mixed content
+uProxy.strict_https_experimental = True
+
+# Spoof HTTP referrer string of third-party requests
+uProxy.spoof_referrer = True
+
 def zorp_uProxy():
         Service("uProxy", uProxy, router=InbandRouter())
         Listener(SockAddrInet("0.0.0.0", 8080), "uProxy")

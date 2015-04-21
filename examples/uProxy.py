@@ -10,7 +10,7 @@ class uProxy(HttpProxyNonTransparent):
     user_agent_interval = timedelta(minutes=5)
     block_hyperlink_auditing = False
     strict_https_experimental = False
-    spoof_referrer = False
+    spoof_referer = False
 
     _current_user_agents = {} # a dict mapping IP addresses to tuples containing the current user agent associated with them, and the last time they were changed
 
@@ -32,7 +32,7 @@ class uProxy(HttpProxyNonTransparent):
                 # TODO: log
                 return HTTP_REQ_REJECT
 
-        if uProxy.spoof_referrer:
+        if uProxy.spoof_referer:
             # TODO: if the headers are present
             if self.getRequestHeader('Host') != urlparse(self.getRequestHeader('Referer')).netloc:
                 # TODO: remove request header entirely

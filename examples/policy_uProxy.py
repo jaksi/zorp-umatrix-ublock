@@ -21,7 +21,7 @@ uProxy.block_hyperlink_auditing = True
 uProxy.strict_https_experimental = True
 
 # Spoof HTTP referrer string of third-party requests
-uProxy.spoof_referrer = True
+uProxy.spoof_referer = True
 
 def zorp_uProxy():
         Service("uProxy", uProxy, router=InbandRouter())

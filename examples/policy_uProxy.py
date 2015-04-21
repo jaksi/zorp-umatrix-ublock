@@ -1,42 +1,21 @@
-import random
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from Zorp.Core import *
-from Zorp.Http import *
+from uProxy import uProxy
 
 
 InetZone(name="internet", addrs=["0.0.0.0/0"])
 
+# Spoof User-Agent string by randomly picking a new one below every 2 minutes
+uProxy.user_agents = [
+    'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:36.0) Gecko/20100101 Firefox/36.0',
+    'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.101 Safari/537.36',
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_2) AppleWebKit/600.3.18 (KHTML, like Gecko) Version/8.0.3 Safari/600.3.18',
+]
+uProxy.user_agent_interval = timedelta(minutes=2)
 
-class uProxy(HttpProxyNonTransparent):
-    user_agents = [
-        'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:36.0) Gecko/20100101 Firefox/36.0',
-        'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.101 Safari/537.36',
-        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_2) AppleWebKit/600.3.18 (KHTML, like Gecko) Version/8.0.3 Safari/600.3.18',
-    ]
-    user_agent_interval = timedelta(minutes=5)
-    current_user_agents = {} # a dict mapping IP addresses to tuples containing the current user agent associated with them, and the last time they were changed
-
-    def config(self):
-        HttpProxyNonTransparent.config(self)
-        self.request["GET"] = (HTTP_REQ_POLICY, self.handleRequest)
-        self.request["POST"] = (HTTP_REQ_POLICY, self.handleRequest)
-
-    def handleRequest(self, method, url, version):
-        if method == 'POST' and self.getRequestHeader('Content-Type') == 'text/ping':
-            return HTTP_REQ_REJECT
-
-        now = datetime.now()
-        src = self.session.client_address.ip_s
-
-        user_agent, last_changed = uProxy.current_user_agents.get(src, (None, None))
-        if not user_agent or now - last_changed > uProxy.user_agent_interval:
-            user_agent = random.choice(uProxy.user_agents)
-            uProxy.current_user_agents[src] = (user_agent, now)
-        self.setRequestHeader('User-Agent', user_agent)
-
-        return HTTP_REQ_ACCEPT
-
+# Block all hyperlink auditing attempts
+uProxy.block_hyperlink_auditing = True
 
 def zorp_uProxy():
         Service("uProxy", uProxy, router=InbandRouter())

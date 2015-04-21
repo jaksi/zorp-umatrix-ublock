@@ -20,33 +20,32 @@ class uProxy(HttpProxyNonTransparent):
         self.request["POST"] = (HTTP_REQ_POLICY, self.handleRequest)
 
     def handleRequest(self, method, url, version):
+        now = datetime.now()
+        src = self.session.client_address.ip_s
+        host = self.getRequestHeader('Host')
+        referer = self.getRequestHeader('Referer')
+
         if uProxy.block_hyperlink_auditing:
             if method == 'POST' and self.getRequestHeader('Content-Type') == 'text/ping':
-                # TODO: log
+                proxyLog(self, '', 0, 'Hyperlink auditing attempt to %s rejected' % host)
                 return HTTP_REQ_REJECT
 
         if uProxy.strict_https_experimental:
-            # TODO: and this is an HTTP request
-            # TODO: if the headers are present
-            if 'text/html' not in self.getRequestHeader('Accept') and self.getRequestHeader('Referer').startswith('https'):
-                # TODO: log
+            if 'text/html' not in self.getRequestHeader('Accept') and referer and referer.startswith('https'):
+                proxyLog(self, '', 0, 'Mixed content request to %s rejected' % host)
                 return HTTP_REQ_REJECT
 
         if uProxy.spoof_referer:
-            # TODO: if the headers are present
-            if self.getRequestHeader('Host') != urlparse(self.getRequestHeader('Referer')).netloc:
-                # TODO: remove request header entirely
+            if referer and host != urlparse(referer).netloc:
+                proxyLog(self, '', 0, '3rd party referer (%s) to %s spoofed' % (referer, host))
                 self.setRequestHeader('Referer', '')
-
-        now = datetime.now()
-        src = self.session.client_address.ip_s
 
         if uProxy.user_agents:
             user_agent, last_changed = uProxy._current_user_agents.get(src, (None, None))
             if not user_agent or now - last_changed > uProxy.user_agent_interval:
                 user_agent = random.choice(uProxy.user_agents)
                 uProxy._current_user_agents[src] = (user_agent, now)
-                # TODO: log
+                proxyLog(self, '', 0, 'User-Agent of client %s replaced with %s for %s' % (src, user_agent, uProxy.user_agent_interval))
             self.setRequestHeader('User-Agent', user_agent)
 
         return HTTP_REQ_ACCEPT

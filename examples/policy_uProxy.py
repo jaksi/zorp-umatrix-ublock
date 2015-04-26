@@ -6,6 +6,12 @@ from uProxy import uProxy
 
 InetZone(name="internet", addrs=["0.0.0.0/0"])
 
+# Spoof HTTP referrer string of third-party requests
+uProxy.spoof_referer = True
+
+# Block all hyperlink auditing attempts
+uProxy.block_hyperlink_auditing = True
+
 # Spoof User-Agent string by randomly picking a new one below every 2 minutes
 uProxy.user_agents = [
     'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:36.0) Gecko/20100101 Firefox/36.0',
@@ -14,11 +20,6 @@ uProxy.user_agents = [
 ]
 uProxy.user_agent_interval = timedelta(minutes=2)
 
-# Block all hyperlink auditing attempts
-uProxy.block_hyperlink_auditing = True
-
-# Spoof HTTP referrer string of third-party requests
-uProxy.spoof_referer = True
 
 def zorp_uProxy():
         Service("uProxy", uProxy, router=InbandRouter())

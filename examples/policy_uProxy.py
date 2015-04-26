@@ -6,6 +6,10 @@ from uProxy import uProxy
 
 InetZone(name="internet", addrs=["0.0.0.0/0"])
 
+# Delete non-blocked session cookies 30 seconds after the last time they have been used
+uProxy.delete_session_cookies = True
+uProxy.unused_session_cookie_lifetime = timedelta(seconds=1)
+
 # Spoof HTTP referrer string of third-party requests
 uProxy.spoof_referer = True
 

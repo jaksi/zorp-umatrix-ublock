@@ -6,6 +6,9 @@ from Zorp.Http import *
 
 
 class uProxy(HttpProxyNonTransparent):
+    delete_session_cookies = False
+    unused_session_cookie_lifetime = timedelta(minutes=60)
+
     spoof_referer = False
 
     block_hyperlink_auditing = False
@@ -13,10 +16,15 @@ class uProxy(HttpProxyNonTransparent):
     user_agents = []
     user_agent_interval = timedelta(minutes=5)
 
+    _current_session_cookies = {} # a dict mapping tuples of IP addresses and cookies to the last time they were used
     _current_user_agents = {} # a dict mapping IP addresses to tuples containing the current user agent associated with them, and the last time they were changed
 
     def config(self):
         HttpProxyNonTransparent.config(self)
+
+        if uProxy.delete_session_cookies:
+            self.response_header["Set-Cookie"] = (HTTP_HDR_POLICY, self.processSetCookie)
+            self.request_header["Cookie"] = (HTTP_HDR_POLICY, self.processCookie)
 
         if uProxy.spoof_referer:
             self.request_header["Referer"] = (HTTP_HDR_POLICY, self.processReferer)
@@ -25,6 +33,33 @@ class uProxy(HttpProxyNonTransparent):
 
         if uProxy.user_agents:
             self.request_header["User-Agent"] = (HTTP_HDR_POLICY, self.processUserAgent)
+
+
+    def processSetCookie(self, name, value):
+        now = datetime.now()
+
+        # if the cookie contains an 'expires' field, therefore not being a session cookie
+        if [c for c in value.split('; ')[1:] if c.startswith('expires')]:
+            return HTTP_HDR_ACCEPT
+
+        src = self.session.client_address.ip_s
+        uProxy._current_session_cookies[(src, value)] = now
+        return HTTP_HDR_ACCEPT
+
+
+    def processCookie(self, name, value):
+        now = datetime.now()
+        src = self.session.client_address.ip_s
+
+        if (src, value) not in uProxy._current_session_cookies:
+            return HTTP_HDR_ACCEPT
+
+        last_use = uProxy._current_session_cookies[(src, value)]
+        if now - last_use > uProxy.unused_session_cookie_lifetime:
+            return HTTP_HDR_DROP
+
+        uProxy._current_session_cookies[(src, value)] = now
+        return HTTP_HDR_ACCEPT
 
 
     def processReferer(self, name, value):

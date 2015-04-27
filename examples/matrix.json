@@ -1,0 +1,12 @@
+{
+    "allow": true,
+    "rules":
+    [
+        {
+            "name": "Reddit thumbnails",
+            "hostname": "thumbs.redditmedia.com",
+            "mime": "image/jpeg",
+            "allow": false
+        }
+    ]
+}

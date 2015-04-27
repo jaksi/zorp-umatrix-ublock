@@ -1,3 +1,4 @@
+import json
 import random
 from datetime import datetime, timedelta
 from urlparse import urlparse
@@ -16,6 +17,9 @@ class uProxy(HttpProxyNonTransparent):
     user_agents = []
     user_agent_interval = timedelta(minutes=5)
 
+    enable_matrix = False
+    matrix_file = '/etc/zorp/matrix.json'
+
     _current_session_cookies = {} # a dict mapping tuples of IP addresses and cookies to the last time they were used
     _current_user_agents = {} # a dict mapping IP addresses to tuples containing the current user agent associated with them, and the last time they were changed
 
@@ -33,6 +37,11 @@ class uProxy(HttpProxyNonTransparent):
 
         if uProxy.user_agents:
             self.request_header["User-Agent"] = (HTTP_HDR_POLICY, self.processUserAgent)
+
+        self.response["*"] = (HTTP_RSP_POLICY, self.handleResponse)
+        if uProxy.enable_matrix:
+            with open(uProxy.matrix_file) as f:
+                uProxy._matrix = json.load(f)
 
 
     def processSetCookie(self, name, value):
@@ -74,7 +83,7 @@ class uProxy(HttpProxyNonTransparent):
 
     def handlePostRequest(self, method, url, version):
         if uProxy.block_hyperlink_auditing:
-            if method == 'POST' and self.getRequestHeader('Content-Type') == 'text/ping':
+            if self.getRequestHeader('Content-Type') == 'text/ping':
                 proxyLog(self, 'Privacy', 3, 'Hyperlink auditing attempt to "%s" rejected' % url)
                 return HTTP_REQ_REJECT
         return HTTP_REQ_ACCEPT
@@ -91,3 +100,31 @@ class uProxy(HttpProxyNonTransparent):
             proxyLog(self, 'Privacy', 3, 'User-Agent of client %s replaced with "%s" for %s' % (src, user_agent, uProxy.user_agent_interval))
             self.current_header_value = user_agent
         return HTTP_HDR_ACCEPT
+
+
+    def handleResponse(self, method, url, version, status):
+        if not uProxy.enable_matrix:
+            return HTTP_RSP_ACCEPT
+
+        host = self.getRequestHeader('Host')
+        content_type = self.getResponseHeader('Content-Type')
+        mime = content_type.split(';')[0] if content_type else ''
+
+        netloc = host.split('.')
+        for precedence in range(len(netloc)):
+            rule_host = '.'.join(netloc[precedence:])
+            for rule in uProxy._matrix['rules']:
+                if 'hostname' in rule and rule['hostname'] == rule_host and 'mime' in rule and (rule['mime'] == mime or rule['mime'] == mime.split('/')[0]):
+                    return HTTP_RSP_ACCEPT if rule['allow'] else HTTP_RSP_REJECT
+
+        for precedence in range(len(netloc)):
+            rule_host = '.'.join(netloc[precedence:])
+            for rule in uProxy._matrix['rules']:
+                if 'hostname' in rule and rule['hostname'] == rule_host and 'mime' not in rule:
+                    return HTTP_RSP_ACCEPT if rule['allow'] else HTTP_RSP_REJECT
+
+        for rule in uProxy._matrix['rules']:
+            if 'hostname' not in rule and 'mime' in rule and (rule['mime'] == mime or rule['mime'] == mime.split('/')[0]):
+                return HTTP_RSP_ACCEPT if rule['allow'] else HTTP_RSP_REJECT
+            
+        return HTTP_RSP_ACCEPT if uProxy._matrix['allow'] else HTTP_RSP_REJECT

@@ -24,6 +24,8 @@ uProxy.user_agents = [
 ]
 uProxy.user_agent_interval = timedelta(minutes=2)
 
+uProxy.enable_matrix = True
+
 
 def zorp_uProxy():
         Service("uProxy", uProxy, router=InbandRouter())

@@ -15,33 +15,18 @@
         },
         {
             "name": "Google ads and tracking",
-            "hostname": [
-                "admob.com",
-                "adsense.com",
-                "adwords.com",
-                "googleadservices.com",
-                "doubleclick.com",
-                "googleanalytics.com",
-                "google-analytics.com",
-                "urchin.com"
-            ],
+            "hostname": "googleadservices.com",
             "allow": false
         },
         {
             "name": "JavaScript",
-            "type": [
-                "application/javascript",
-                "application/x-javascript"
-            ],
+            "type": "application/javascript",
             "allow": false
         },
         {
             "name": "JavaScript on YouTube",
             "hostname": "youtube.com",
-            "type": [
-                "application/javascript",
-                "application/x-javascript"
-            ],
+            "type": "application/javascript",
             "allow": true
         }
     ]

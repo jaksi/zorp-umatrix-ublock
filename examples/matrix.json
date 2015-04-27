@@ -1,12 +1,48 @@
 {
     "allow": true,
-    "rules":
-    [
+    "rules": [
         {
             "name": "Reddit thumbnails",
             "hostname": "thumbs.redditmedia.com",
-            "mime": "image/jpeg",
+            "type": "image",
             "allow": false
+        },
+        {
+            "name": "Facebook cookies",
+            "hostname": "facebook.com",
+            "type": "Cookie",
+            "allow": false
+        },
+        {
+            "name": "Google ads and tracking",
+            "hostname": [
+                "admob.com",
+                "adsense.com",
+                "adwords.com",
+                "googleadservices.com",
+                "doubleclick.com",
+                "googleanalytics.com",
+                "google-analytics.com",
+                "urchin.com"
+            ],
+            "allow": false
+        },
+        {
+            "name": "JavaScript",
+            "type": [
+                "application/javascript",
+                "application/x-javascript"
+            ],
+            "allow": false
+        },
+        {
+            "name": "JavaScript on YouTube",
+            "hostname": "youtube.com",
+            "type": [
+                "application/javascript",
+                "application/x-javascript"
+            ],
+            "allow": true
         }
     ]
 }

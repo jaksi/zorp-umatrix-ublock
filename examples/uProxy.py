@@ -77,7 +77,7 @@ class uProxy(HttpProxyNonTransparent):
 
         if referer and host != urlparse(referer).netloc:
             proxyLog(self, 'Privacy', 3, '3rd party referer "%s" to "%s" spoofed' % (referer, host))
-            self.current_header_value = ''
+            return HTTP_HDR_DROP
         return HTTP_HDR_ACCEPT
 
 

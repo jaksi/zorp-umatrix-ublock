@@ -115,19 +115,19 @@ class uProxy(HttpProxyNonTransparent):
             rule_host = '.'.join(netloc[precedence:])
             for rule in uProxy._matrix['rules']:
                 if 'hostname' in rule and rule['hostname'] == rule_host and 'type' in rule and (rule['type'] == mime or rule['type'] == mime.split('/')[0]):
-                    proxyLog(self, 'Matrix', 3, 'Response from "%s" with type "%s" %s (rule %s)' % (host, mime, 'accepted' if rule['allow'] else 'rejected', rule['name']))
+                    proxyLog(self, 'Matrix', 3, 'Response from "%s" with type "%s" %s (rule %s)' % (host, mime, 'accepted' if rule['allow'] else 'rejected', str(rule['name'])))
                     return HTTP_RSP_ACCEPT if rule['allow'] else HTTP_RSP_REJECT
 
         for precedence in range(len(netloc)):
             rule_host = '.'.join(netloc[precedence:])
             for rule in uProxy._matrix['rules']:
                 if 'hostname' in rule and rule['hostname'] == rule_host and 'type' not in rule:
-                    proxyLog(self, 'Matrix', 3, 'Response from "%s" with type "%s" %s (rule %s)' % (host, mime, 'accepted' if rule['allow'] else 'rejected', rule['name']))
+                    proxyLog(self, 'Matrix', 3, 'Response from "%s" with type "%s" %s (rule %s)' % (host, mime, 'accepted' if rule['allow'] else 'rejected', str(rule['name'])))
                     return HTTP_RSP_ACCEPT if rule['allow'] else HTTP_RSP_REJECT
 
         for rule in uProxy._matrix['rules']:
             if 'hostname' not in rule and 'type' in rule and (rule['type'] == mime or rule['type'] == mime.split('/')[0]):
-                proxyLog(self, 'Matrix', 3, 'Response from "%s" with type "%s" %s (rule %s)' % (host, mime, 'accepted' if rule['allow'] else 'rejected', rule['name']))
+                proxyLog(self, 'Matrix', 3, 'Response from "%s" with type "%s" %s (rule %s)' % (host, mime, 'accepted' if rule['allow'] else 'rejected', str(rule['name'])))
                 return HTTP_RSP_ACCEPT if rule['allow'] else HTTP_RSP_REJECT
             
         return HTTP_RSP_ACCEPT if uProxy._matrix['allow'] else HTTP_RSP_REJECT

@@ -2,29 +2,24 @@
     "allow": true,
     "rules": [
         {
-            "name": "Reddit thumbnails",
             "hostname": "thumbs.redditmedia.com",
             "type": "image",
             "allow": false
         },
         {
-            "name": "Facebook cookies",
             "hostname": "facebook.com",
             "type": "Cookie",
             "allow": false
         },
         {
-            "name": "Google ads and tracking",
             "hostname": "googleadservices.com",
             "allow": false
         },
         {
-            "name": "JavaScript",
-            "type": "application/javascript",
+            "type": "JavaScript",
             "allow": false
         },
         {
-            "name": "JavaScript on YouTube",
             "hostname": "youtube.com",
             "type": "application/javascript",
             "allow": true

@@ -43,6 +43,8 @@ class uProxy(HttpProxyNonTransparent):
             with open(uProxy.matrix_file) as f:
                 uProxy._matrix = json.load(f)
             for rule in uProxy._matrix['rules']:
+                if 'hostname' in rule and type(rule['hostname']) == str:
+                    rule['hostname'] = [rule['hostname']]
                 if rule.get('type') == 'JavaScript':
                     rule['type'] = [
                         'application/x-javascript',
@@ -57,6 +59,8 @@ class uProxy(HttpProxyNonTransparent):
                         'audio',
                         'video'
                     ]
+                if 'type' in rule and type(rule['type']) == str:
+                    rule['type'] = [rule['type']]
 
 
     def processSetCookie(self, name, value):
@@ -129,20 +133,22 @@ class uProxy(HttpProxyNonTransparent):
         for precedence in range(len(netloc)):
             rule_host = '.'.join(netloc[precedence:])
             for rule in uProxy._matrix['rules']:
-                if 'hostname' in rule and rule['hostname'] == rule_host and 'type' in rule and (rule['type'] == mime or rule['type'] == mime.split('/')[0]):
-                    proxyLog(self, 'Matrix', 3, 'Response from "%s" with type "%s" %s (rule %s)' % (host, mime, 'accepted' if rule['allow'] else 'rejected', str(rule['name'])))
+                if ('hostname' in rule and rule_host in rule['hostname'] and 
+                        'type' in rule and (mime in rule['type'] or mime in [m.split('/')[0] for m in rule['type']])):
+                    proxyLog(self, 'Matrix', 3, 'Response from "%s" with type "%s" %s' % (host, mime, 'accepted' if rule['allow'] else 'rejected'))
                     return HTTP_RSP_ACCEPT if rule['allow'] else HTTP_RSP_REJECT
 
         for precedence in range(len(netloc)):
             rule_host = '.'.join(netloc[precedence:])
             for rule in uProxy._matrix['rules']:
-                if 'hostname' in rule and rule['hostname'] == rule_host and 'type' not in rule:
-                    proxyLog(self, 'Matrix', 3, 'Response from "%s" with type "%s" %s (rule %s)' % (host, mime, 'accepted' if rule['allow'] else 'rejected', str(rule['name'])))
+                if 'hostname' in rule and rule_host in rule['hostname'] and 'type' not in rule:
+                    proxyLog(self, 'Matrix', 3, 'Response from "%s" with type "%s" %s' % (host, mime, 'accepted' if rule['allow'] else 'rejected'))
                     return HTTP_RSP_ACCEPT if rule['allow'] else HTTP_RSP_REJECT
 
         for rule in uProxy._matrix['rules']:
-            if 'hostname' not in rule and 'type' in rule and (rule['type'] == mime or rule['type'] == mime.split('/')[0]):
-                proxyLog(self, 'Matrix', 3, 'Response from "%s" with type "%s" %s (rule %s)' % (host, mime, 'accepted' if rule['allow'] else 'rejected', str(rule['name'])))
+            if ('hostname' not in rule and
+                    'type' in rule and (mime in rule['type'] or mime in [m.split('/')[0] for m in rule['type']])):
+                proxyLog(self, 'Matrix', 3, 'Response from "%s" with type "%s" %s' % (host, mime, 'accepted' if rule['allow'] else 'rejected'))
                 return HTTP_RSP_ACCEPT if rule['allow'] else HTTP_RSP_REJECT
             
         return HTTP_RSP_ACCEPT if uProxy._matrix['allow'] else HTTP_RSP_REJECT

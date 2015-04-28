@@ -2,26 +2,26 @@
     "allow": true,
     "rules": [
         {
-            "hostname": "thumbs.redditmedia.com",
-            "type": "image",
+            "hostname": ["thumbs.redditmedia.com"],
+            "type": ["image"],
             "allow": false
         },
         {
-            "hostname": "facebook.com",
-            "type": "Cookie",
+            "hostname": ["facebook.com"],
+            "type": ["Cookie"],
             "allow": false
         },
         {
-            "hostname": "googleadservices.com",
+            "hostname": ["googleadservices.com"],
             "allow": false
         },
         {
-            "type": "JavaScript",
+            "type": ["JavaScript"],
             "allow": false
         },
         {
-            "hostname": "youtube.com",
-            "type": "application/javascript",
+            "hostname": ["youtube.com"],
+            "type": ["JavaScript"],
             "allow": true
         }
     ]

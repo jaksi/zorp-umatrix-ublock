@@ -42,6 +42,21 @@ class uProxy(HttpProxyNonTransparent):
         if uProxy.enable_matrix:
             with open(uProxy.matrix_file) as f:
                 uProxy._matrix = json.load(f)
+            for rule in uProxy._matrix['rules']:
+                if rule.get('type') == 'JavaScript':
+                    rule['type'] = [
+                        'application/x-javascript',
+                        'application/javascript',
+                        'text/javascript'
+                    ]
+                elif rule.get('type') == 'CSS':
+                    rule['type'] = 'text/css'
+                elif rule.get('type') == 'Media':
+                    rule['type'] = [
+                        'image',
+                        'audio',
+                        'video'
+                    ]
 
 
     def processSetCookie(self, name, value):

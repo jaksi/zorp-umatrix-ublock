@@ -26,9 +26,8 @@ class uProxy(HttpProxyNonTransparent):
     def config(self):
         HttpProxyNonTransparent.config(self)
 
-        if uProxy.delete_session_cookies:
-            self.response_header["Set-Cookie"] = (HTTP_HDR_POLICY, self.processSetCookie)
-            self.request_header["Cookie"] = (HTTP_HDR_POLICY, self.processCookie)
+        self.response_header["Set-Cookie"] = (HTTP_HDR_POLICY, self.processSetCookie)
+        self.request_header["Cookie"] = (HTTP_HDR_POLICY, self.processCookie)
 
         if uProxy.spoof_referer:
             self.request_header["Referer"] = (HTTP_HDR_POLICY, self.processReferer)
@@ -64,6 +63,13 @@ class uProxy(HttpProxyNonTransparent):
     def processSetCookie(self, name, value):
         now = datetime.now()
 
+        if uProxy.enable_matrix:
+            if not self.cookieAllowed():
+                return HTTP_HDR_DROP
+
+        if not uProxy.delete_session_cookies:
+            return HTTP_HDR_ACCEPT
+
         # if the cookie contains an 'expires' field, therefore not being a session cookie
         if [c for c in value.split('; ')[1:] if c.startswith('expires')]:
             return HTTP_HDR_ACCEPT
@@ -77,6 +83,13 @@ class uProxy(HttpProxyNonTransparent):
         now = datetime.now()
         src = self.session.client_address.ip_s
 
+        if uProxy.enable_matrix:
+            if not self.cookieAllowed():
+                return HTTP_HDR_DROP
+
+        if not uProxy.delete_session_cookies:
+            return HTTP_HDR_ACCEPT
+
         if (src, value) not in uProxy._current_session_cookies:
             return HTTP_HDR_ACCEPT
 
@@ -87,6 +100,34 @@ class uProxy(HttpProxyNonTransparent):
         uProxy._current_session_cookies[(src, value)] = now
         return HTTP_HDR_ACCEPT
 
+
+    def cookieAllowed(self):
+        host = self.getRequestHeader('Host')
+
+        netloc = host.split('.')
+        for precedence in range(len(netloc)):
+            rule_host = '.'.join(netloc[precedence:])
+            for rule in uProxy._matrix['rules']:
+                if ('hostname' in rule and rule_host in rule['hostname'] and 
+                        'type' in rule and 'Cookie' in rule['type']):
+                    proxyLog(self, 'Matrix', 3, 'Response from "%s" with type "%s" %s' % (host, 'Cookie', 'accepted' if rule['allow'] else 'rejected'))
+                    return rule['allow']
+
+        for precedence in range(len(netloc)):
+            rule_host = '.'.join(netloc[precedence:])
+            for rule in uProxy._matrix['rules']:
+                if 'hostname' in rule and rule_host in rule['hostname'] and 'type' not in rule:
+                    proxyLog(self, 'Matrix', 3, 'Response from "%s" with type "%s" %s' % (host, 'Cookie', 'accepted' if rule['allow'] else 'rejected'))
+                    return rule['allow']
+
+        for rule in uProxy._matrix['rules']:
+            if ('hostname' not in rule and
+                    'type' in rule and 'Cookie' in rule['type']):
+                proxyLog(self, 'Matrix', 3, 'Response from "%s" with type "%s" %s' % (host, 'Cookie', 'accepted' if rule['allow'] else 'rejected'))
+                return rule['allow']
+            
+        return uProxy._matrix['allow']
+        
 
     def processReferer(self, name, value):
         host = self.getRequestHeader('Host')

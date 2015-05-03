@@ -18,7 +18,7 @@ EOD
 lxc-start -n ${NAME}
 sleep 5
 lxc-attach -n ${NAME} -- <<EOD
-yum -y install git libtool gcc-c++ zlib-devel openssl-devel glib2-devel make gperf python-devel py-radix pyOpenSSL python-pydns python-pip
+yum -y install git libtool gcc-c++ zlib-devel openssl-devel glib2-devel make gperf python-devel py-radix pyOpenSSL python-pydns python-pip wget
 pip install prctl
 
 cd /usr/src
@@ -54,6 +54,8 @@ git clone https://github.com/jaksi/zorp-umatrix-ublock
 cp zorp-umatrix-ublock/systemd-service/zorp.service /etc/systemd/system/
 cp zorp-umatrix-ublock/systemd-service/zorp /etc/sysconfig/
 cp zorp-umatrix-ublock/examples/* /etc/zorp/
+
+wget -O /etc/zorp/abp.txt 'https://easylist-downloads.adblockplus.org/easylist.txt'
 
 systemctl enable zorp
 systemctl start zorp

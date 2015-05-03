@@ -1,5 +1,6 @@
 import json
 import random
+import re
 from datetime import datetime, timedelta
 from urlparse import urlparse
 
@@ -19,6 +20,9 @@ class uProxy(HttpProxyNonTransparent):
 
     enable_matrix = False
     matrix_file = '/etc/zorp/matrix.json'
+
+    enable_abp = False
+    abp_filter = '/etc/zorp/abp.txt'
 
     _current_session_cookies = {} # a dict mapping tuples of IP addresses and cookies to the last time they were used
     _current_user_agents = {} # a dict mapping IP addresses to tuples containing the current user agent associated with them, and the last time they were changed
@@ -44,6 +48,86 @@ class uProxy(HttpProxyNonTransparent):
             for i, rule in enumerate(uProxy._matrix['rules']):
                 if 'type' in rule:
                     uProxy._matrix['rules'][i]['type'] = self.typeShortcut(rule['type'])
+
+        if uProxy.enable_abp:
+            uproxy._abp_rules = []
+            element_hiding = 0
+            with open(uProxy.abp_filter) as f:
+                for line in f:
+                    line = line[:-1]
+                    if line[0] == '!':
+                        continue
+                    split = line.split('$')
+                    rule = split[0]
+                    if '##' in rule:
+                        element_hiding += 1
+                        continue
+                    options = '$'.join(split[1:])
+                    types = []
+                    not_types = []
+                    domains = []
+                    not_domains = []
+                    match_case = False
+                    allowed = False
+                    if rule.startswith('@@|http'):
+                        allowed = True
+                        rule = rule[7:]
+                    elif rule.startswith('@@'):
+                        allowed = True
+                        rule = rule[2:]
+                    for option in options.split(','):
+                        if option == 'script':
+                            types.append('script')
+                        elif option == 'image':
+                            types.append('image')
+                        elif option == 'stylesheet':
+                            types.append('stylesheet')
+                        elif option == 'document':
+                            types.append('document')
+                        elif option == '~script':
+                            not_types.append('script')
+                        elif option == '~image':
+                            not_types.append('image')
+                        elif option == '~stylesheet':
+                            not_types.append('stylesheet')
+                        elif option == '~document':
+                            not_types.append('document')
+
+                        elif option == 'match-case':
+                            match_case = True
+
+                        elif option.startswith('domain='):
+                            for domain in option[7:].split('|'):
+                                if domain[0] == '~':
+                                    not_domains.append(domain)
+                                else:
+                                    domains.append(domain)
+                        else:
+                            proxyLog(self, 'ABP', 3, 'Unknown option %s. Rule %s discarded.' % (option, line))
+                            continue
+                    if rule[0] == '/' and rule[-1] == '/':
+                        rule = rule[1:-1]
+                    else:
+                        rule = re.escape(rule)
+                        rule = rule.replace(r'\*', '.*')
+                        if rule[-2:] == r'\|':
+                            rule = rule[:-2] + '$'
+                        if rule[:4] == r'\|\|':
+                            rule = '^' + rule[:4]
+                        rule = rule.replace(r'\^', r'[^\w-.%]')
+                    uProxy._abp_rules.append(
+                        {
+                            'allowed': allowed,
+                            'rule': rule,
+                            'types': types,
+                            'not_types': not_types,
+                            'domains': domains,
+                            'not_domains': not_domains,
+                            'match_case': match_case
+                        }
+                    )
+            proxyLog(self, 'ABP', 3, '%s element hiding rules could not be loaded.' % element_hiding)
+            proxyLog(self, 'ABP', 3, '%s rules loaded.' % len(uProxy._abp_rules))
 
 
     def typeShortcut(self, types):

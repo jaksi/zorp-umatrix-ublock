@@ -166,6 +166,7 @@ class uProxy(HttpProxyNonTransparent):
     def processCookie(self, name, value):
         now = datetime.now()
         src = self.session.client_address.ip_s
+        host = self.getRequestHeader('Host')
 
         if uProxy.enable_matrix:
             if not self.cookieAllowed():
@@ -179,6 +180,7 @@ class uProxy(HttpProxyNonTransparent):
 
         last_use = uProxy._current_session_cookies[(src, value)]
         if now - last_use > uProxy.unused_session_cookie_lifetime:
+            proxyLog(self, 'Privacy', 3, 'Expired session cookie from %s rejected.' % host)
             return HTTP_HDR_DROP
 
         uProxy._current_session_cookies[(src, value)] = now

@@ -30,6 +30,9 @@ uProxy.enable_matrix = True
 # Enable the partial Adblock Plus filtering
 uProxy.enable_abp = True
 
+# Load matrix and ABP ruleset
+uProxy.load()
+
 
 def zorp_uProxy():
         Service("uProxy", uProxy, router=InbandRouter())

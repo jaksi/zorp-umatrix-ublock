@@ -27,21 +27,7 @@ class uProxy(HttpProxyNonTransparent):
     _current_session_cookies = {} # a dict mapping tuples of IP addresses and cookies to the last time they were used
     _current_user_agents = {} # a dict mapping IP addresses to tuples containing the current user agent associated with them, and the last time they were changed
 
-    def config(self):
-        HttpProxyNonTransparent.config(self)
-
-        self.response_header["Set-Cookie"] = (HTTP_HDR_POLICY, self.processSetCookie)
-        self.request_header["Cookie"] = (HTTP_HDR_POLICY, self.processCookie)
-
-        if uProxy.spoof_referer:
-            self.request_header["Referer"] = (HTTP_HDR_POLICY, self.processReferer)
-
-        self.request["POST"] = (HTTP_REQ_POLICY, self.handlePostRequest)
-
-        if uProxy.user_agents:
-            self.request_header["User-Agent"] = (HTTP_HDR_POLICY, self.processUserAgent)
-
-        self.response["*"] = (HTTP_RSP_POLICY, self.handleResponse)
+    def load(self):
         if uProxy.enable_matrix:
             with open(uProxy.matrix_file) as f:
                 uProxy._matrix = json.load(f)
@@ -129,6 +115,23 @@ class uProxy(HttpProxyNonTransparent):
                     )
             proxyLog(self, 'ABP', 3, '%s element hiding rules could not be loaded.' % element_hiding)
             proxyLog(self, 'ABP', 3, '%s rules loaded.' % len(uProxy._abp_rules))
+        
+
+    def config(self):
+        HttpProxyNonTransparent.config(self)
+
+        self.response_header["Set-Cookie"] = (HTTP_HDR_POLICY, self.processSetCookie)
+        self.request_header["Cookie"] = (HTTP_HDR_POLICY, self.processCookie)
+
+        if uProxy.spoof_referer:
+            self.request_header["Referer"] = (HTTP_HDR_POLICY, self.processReferer)
+
+        self.request["POST"] = (HTTP_REQ_POLICY, self.handlePostRequest)
+
+        if uProxy.user_agents:
+            self.request_header["User-Agent"] = (HTTP_HDR_POLICY, self.processUserAgent)
+
+        self.response["*"] = (HTTP_RSP_POLICY, self.handleResponse)
 
 
     def typeShortcut(self, types):

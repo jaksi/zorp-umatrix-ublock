@@ -27,13 +27,14 @@ class uProxy(HttpProxyNonTransparent):
     _current_session_cookies = {} # a dict mapping tuples of IP addresses and cookies to the last time they were used
     _current_user_agents = {} # a dict mapping IP addresses to tuples containing the current user agent associated with them, and the last time they were changed
 
-    def load(self):
+    @staticmethod
+    def load():
         if uProxy.enable_matrix:
             with open(uProxy.matrix_file) as f:
                 uProxy._matrix = json.load(f)
             for i, rule in enumerate(uProxy._matrix['rules']):
                 if 'type' in rule:
-                    uProxy._matrix['rules'][i]['type'] = self.typeShortcut(rule['type'])
+                    uProxy._matrix['rules'][i]['type'] = uProxy.typeShortcut(rule['type'])
 
         if uProxy.enable_abp:
             uProxy._abp_rules = []
@@ -90,18 +91,17 @@ class uProxy(HttpProxyNonTransparent):
                                     else:
                                         domains.append(domain)
                             else:
-                                proxyLog(self, 'ABP', 3, 'Unknown option %s. Rule %s discarded.' % (option, line))
                                 continue
                     if rule[0] == '/' and rule[-1] == '/':
                         rule = rule[1:-1]
                     else:
                         rule = re.escape(rule)
                         rule = rule.replace(r'\*', '.*')
+                        rule = rule.replace(r'\^', r'[^\w\-.%]')
                         if rule[-2:] == r'\|':
                             rule = rule[:-2] + '$'
                         if rule[:4] == r'\|\|':
                             rule = '^' + rule[:4]
-                        rule = rule.replace(r'\^', r'[^\w-.%]')
                     uProxy._abp_rules.append(
                         {
                             'allowed': allowed,
@@ -113,8 +113,6 @@ class uProxy(HttpProxyNonTransparent):
                             'match_case': match_case
                         }
                     )
-            proxyLog(self, 'ABP', 3, '%s element hiding rules could not be loaded.' % element_hiding)
-            proxyLog(self, 'ABP', 3, '%s rules loaded.' % len(uProxy._abp_rules))
         
 
     def config(self):
@@ -134,7 +132,8 @@ class uProxy(HttpProxyNonTransparent):
         self.response["*"] = (HTTP_RSP_POLICY, self.handleResponse)
 
 
-    def typeShortcut(self, types):
+    @staticmethod
+    def typeShortcut(types):
         r = []
         for t in types:
             if t == 'JavaScript':
@@ -152,7 +151,7 @@ class uProxy(HttpProxyNonTransparent):
         now = datetime.now()
 
         if uProxy.enable_matrix:
-            if not self.cookieAllowed():
+            if not self.typeAllowed('Cookie'):
                 return HTTP_HDR_DROP
 
         if not uProxy.delete_session_cookies:
@@ -173,7 +172,7 @@ class uProxy(HttpProxyNonTransparent):
         host = self.getRequestHeader('Host')
 
         if uProxy.enable_matrix:
-            if not self.cookieAllowed():
+            if not self.typeAllowed('Cookie'):
                 return HTTP_HDR_DROP
 
         if not uProxy.delete_session_cookies:
@@ -191,7 +190,7 @@ class uProxy(HttpProxyNonTransparent):
         return HTTP_HDR_ACCEPT
 
 
-    def cookieAllowed(self):
+    def typeAllowed(self, mime):
         host = self.getRequestHeader('Host')
 
         netloc = host.split('.')
@@ -199,21 +198,21 @@ class uProxy(HttpProxyNonTransparent):
             rule_host = '.'.join(netloc[precedence:])
             for rule in uProxy._matrix['rules']:
                 if ('hostname' in rule and rule_host in rule['hostname'] and 
-                        'type' in rule and 'Cookie' in rule['type']):
-                    proxyLog(self, 'Matrix', 3, 'Response from "%s" with type "%s" %s' % (host, 'Cookie', 'accepted' if rule['allow'] else 'rejected'))
+                        'type' in rule and (mime in rule['type'] or mime.split('/')[0] in rule['type'])):
+                    proxyLog(self, 'Matrix', 3, 'Response from "%s" with type "%s" %s' % (host, mime, 'accepted' if rule['allow'] else 'rejected'))
                     return rule['allow']
 
         for precedence in range(len(netloc)):
             rule_host = '.'.join(netloc[precedence:])
             for rule in uProxy._matrix['rules']:
                 if 'hostname' in rule and rule_host in rule['hostname'] and 'type' not in rule:
-                    proxyLog(self, 'Matrix', 3, 'Response from "%s" with type "%s" %s' % (host, 'Cookie', 'accepted' if rule['allow'] else 'rejected'))
+                    proxyLog(self, 'Matrix', 3, 'Response from "%s" with type "%s" %s' % (host, mime, 'accepted' if rule['allow'] else 'rejected'))
                     return rule['allow']
 
         for rule in uProxy._matrix['rules']:
             if ('hostname' not in rule and
-                    'type' in rule and 'Cookie' in rule['type']):
-                proxyLog(self, 'Matrix', 3, 'Response from "%s" with type "%s" %s' % (host, 'Cookie', 'accepted' if rule['allow'] else 'rejected'))
+                    'type' in rule and (mime in rule['type'] or mime.split('/')[0] in rule['type'])):
+                proxyLog(self, 'Matrix', 3, 'Response from "%s" with type "%s" %s' % (host, mime, 'accepted' if rule['allow'] else 'rejected'))
                 return rule['allow']
 
         return uProxy._matrix['allow']
@@ -258,41 +257,22 @@ class uProxy(HttpProxyNonTransparent):
             content_type = self.getResponseHeader('Content-Type')
             mime = content_type.split(';')[0] if content_type else ''
 
-            netloc = host.split('.')
-            for precedence in range(len(netloc)):
-                rule_host = '.'.join(netloc[precedence:])
-                for rule in uProxy._matrix['rules']:
-                    if ('hostname' in rule and rule_host in rule['hostname'] and 
-                            'type' in rule and (mime in rule['type'] or mime.split('/')[0] in rule['type'])):
-                        proxyLog(self, 'Matrix', 3, 'Response from "%s" with type "%s" %s' % (host, mime, 'accepted' if rule['allow'] else 'rejected'))
-                        return HTTP_RSP_ACCEPT if rule['allow'] else HTTP_RSP_REJECT
-
-            for precedence in range(len(netloc)):
-                rule_host = '.'.join(netloc[precedence:])
-                for rule in uProxy._matrix['rules']:
-                    if 'hostname' in rule and rule_host in rule['hostname'] and 'type' not in rule:
-                        proxyLog(self, 'Matrix', 3, 'Response from "%s" with type "%s" %s' % (host, mime, 'accepted' if rule['allow'] else 'rejected'))
-                        return HTTP_RSP_ACCEPT if rule['allow'] else HTTP_RSP_REJECT
-
-            for rule in uProxy._matrix['rules']:
-                if ('hostname' not in rule and
-                        'type' in rule and (mime in rule['type'] or mime.split('/')[0] in rule['type'])):
-                    proxyLog(self, 'Matrix', 3, 'Response from "%s" with type "%s" %s' % (host, mime, 'accepted' if rule['allow'] else 'rejected'))
-                    return HTTP_RSP_ACCEPT if rule['allow'] else HTTP_RSP_REJECT
-
-            return HTTP_RSP_ACCEPT if uProxy._matrix['allow'] else HTTP_RSP_REJECT
+            if not self.typeAllowed(mime):
+                return HTTP_RSP_REJECT
 
         if uProxy.enable_abp:
             for rule in filter(lambda r: r['allowed'], uProxy._abp_rules):
-                if (re.search(rule, url, flags=re.IGNORECASE if not rule['match_case'] else '') and
-                        mime in rule['types'] and mime not in rule['not_types'] and
-                        host in rule['domains'] and rule not in rule['not_domains']):
+                if (re.search(rule['rule'], url, flags=re.IGNORECASE if not rule['match_case'] else '') and
+                        (not rule['types'] or mime in rule['types']) and (not rule['not_types'] or mime not in rule['not_types']) and
+                        (not rule['domains'] or host in rule['domains']) and (not rule['not_domains'] or rule not in rule['not_domains'])):
+                    proxyLog(self, 'ABP', 3, 'Response from %s whitelisted' % host)
                     return HTTP_RSP_ACCEPT
 
             for rule in filter(lambda r: not r['allowed'], uProxy._abp_rules):
-                if (re.search(rule, url, flags=re.IGNORECASE if not rule['match_case'] else '') and
-                        mime in rule['types'] and mime not in rule['not_types'] and
-                        host in rule['domains'] and rule not in rule['not_domains']):
+                if (re.search(rule['rule'], url, flags=re.IGNORECASE if not rule['match_case'] else '') and
+                        (not rule['types'] or mime in rule['types']) and (not rule['not_types'] or mime not in rule['not_types']) and
+                        (not rule['domains'] or host in rule['domains']) and (not rule['not_domains'] or rule not in rule['not_domains'])):
+                    proxyLog(self, 'ABP', 3, 'Response from %s blacklisted' % host)
                     return HTTP_RSP_REJECT
 
         return HTTP_RSP_ACCEPT

@@ -245,7 +245,7 @@ class uProxy(HttpProxyNonTransparent):
             user_agent = random.choice(uProxy.user_agents)
             uProxy._current_user_agents[src] = (user_agent, now)
             proxyLog(self, 'Privacy', 3, 'User-Agent of client %s replaced with "%s" for %s' % (src, user_agent, uProxy.user_agent_interval))
-            self.current_header_value = user_agent
+        self.current_header_value = user_agent
         return HTTP_HDR_ACCEPT
 
 

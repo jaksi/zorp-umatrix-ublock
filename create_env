@@ -3,16 +3,11 @@
 set -e
 
 NAME='zorp'
-IP='192.168.0.137'
 
 lxc-create -n ${NAME} -t fedora -- -R 21
 
 cat >> "/var/lib/lxc/${NAME}/config" <<EOD
-lxc.network.type = veth
-lxc.network.flags = up
-lxc.network.link = br0
-lxc.network.name = eth0
-lxc.network.ipv4 = ${IP}
+lxc.network.type = none
 EOD
 
 lxc-start -n ${NAME}

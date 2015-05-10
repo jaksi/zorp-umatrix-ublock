@@ -27,6 +27,9 @@ uProxy.user_agent_interval = timedelta(minutes=2)
 # Enable the matrix-based filtering
 uProxy.enable_matrix = True
 
+# Enable the ABP filters
+uProxy.enable_abp = True
+
 # Load matrix and ABP ruleset
 uProxy.load()
 

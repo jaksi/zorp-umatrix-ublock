@@ -6,7 +6,7 @@ NAME='zorp'
 
 lxc-create -n ${NAME} -t fedora -- -R 21
 
-sed 's/empty/none/' "/var/lib/lxc/${NAME}/config"
+sed -i 's/empty/none/' "/var/lib/lxc/${NAME}/config"
 
 lxc-start -n ${NAME}
 sleep 5

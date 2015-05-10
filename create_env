@@ -48,6 +48,7 @@ cd ..
 git clone https://github.com/jaksi/zorp-umatrix-ublock
 cp zorp-umatrix-ublock/systemd-service/zorp.service /etc/systemd/system/
 cp zorp-umatrix-ublock/systemd-service/zorp /etc/sysconfig/
+cp zorp-umatrix-ublock/uProxy.py /etc/zorp/
 cp zorp-umatrix-ublock/examples/* /etc/zorp/
 
 wget -O /etc/zorp/abp.txt 'https://easylist-downloads.adblockplus.org/easylist.txt'

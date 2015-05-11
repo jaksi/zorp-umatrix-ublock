@@ -1,0 +1,85 @@
+#!/usr/bin/env python3
+
+import json
+import sys
+from argparse import ArgumentParser
+
+
+UNSUPPORTED_TYPES = ['frame', 'plugin', 'xhr']
+
+SUPPORTED_TYPES = {
+    'script': 'JavaScript',
+    'cookie': 'Cookie',
+    'image': 'image',
+    'css': 'CSS',
+    'other': 'Media'
+}
+
+
+def readRules(fname):
+    first_party = 0
+    with_context = 0
+    unsupported_type = {}
+    with open(fname) as f:
+        for line in f:
+            line = line.strip('\n')
+            try:
+                r_context, r_hostname, r_type, r_decision = line.split(' ')
+            except ValueError:
+                raise ValueError('Erroneous rule "{}"'.format(line))
+
+            if r_hostname == '1st-party':
+                first_party += 1
+                continue
+
+            if r_context != '*':
+                with_context += 1
+                continue
+
+            if r_type in UNSUPPORTED_TYPES:
+                if r_type in unsupported_type:
+                    unsupported_type[r_type] += 1
+                else:
+                    unsupported_type[r_type] = 1
+                continue
+
+            result = {'allowed': r_decision == 'allow'}
+            if r_type != '*':
+                result['type'] = [SUPPORTED_TYPES[r_type]]
+            if r_hostname != '*':
+                result['hostname'] = [r_hostname]
+            yield result
+
+    if first_party:
+        print('{} 1st-party rule(s)  dropped'.format(first_party))
+    if with_context:
+        print('{} rule(s) with context dropped'.format(with_context))
+    if unsupported_type:
+        print('Number of rules with unsupported types:')
+        for r_type, count in unsupported_type.items():
+            print('    {}: {}'.format(r_type, count))
+
+
+def main():
+    parser = ArgumentParser(description='Convert uMatrix rules to uProxy rules')
+    parser.add_argument('uMatrix_rule', type=str, help='The uMatrix rule to convert')
+    parser.add_argument('-o', type=str, default='', help='The output uProxy rule')
+    args = parser.parse_args()
+
+    fname_in = args.uMatrix_rule
+    rules = list(readRules(fname_in))
+    global_rules = [rule for rule in rules if 'type' not in rule and 'hostname' not in rule]
+    if not global_rules:
+        raise ValueError('No global rule')
+    if len(global_rules) > 1:
+        raise ValueError('More than one global rule')
+    rules.remove(global_rules[0])
+
+    fname_out = args.o or '{}.json'.format(fname_in)
+    with open(fname_out, 'w') as f:
+        json.dump({'allowed': global_rules[0]['allowed'], 'rules': rules}, f,
+indent=True)
+
+
+if __name__ == '__main__':
+    main()

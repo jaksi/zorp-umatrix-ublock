@@ -141,7 +141,7 @@ class uProxy(HttpProxyNonTransparent):
             elif t == 'CSS':
                 r.append('text/css')
             elif t == 'Media':
-                r.extend('image', 'audio', 'video')
+                r.extend(['image', 'audio', 'video'])
             else:
                 r.append(t)
         return r

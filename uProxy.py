@@ -194,13 +194,14 @@ class uProxy(HttpProxyNonTransparent):
         host = self.getRequestHeader('Host')
 
         netloc = host.split('.')
-        for precedence in range(len(netloc)):
-            rule_host = '.'.join(netloc[precedence:])
-            for rule in uProxy._matrix['rules']:
-                if ('hostname' in rule and rule_host in rule['hostname'] and 
-                        'type' in rule and (mime in rule['type'] or mime.split('/')[0] in rule['type'])):
-                    proxyLog(self, 'Matrix', 3, 'Response from "%s" with type "%s" %s' % (host, mime, 'accepted' if rule['allow'] else 'rejected'))
-                    return rule['allow']
+        if mime != 'text/html':
+            for precedence in range(len(netloc)):
+                rule_host = '.'.join(netloc[precedence:])
+                for rule in uProxy._matrix['rules']:
+                    if ('hostname' in rule and rule_host in rule['hostname'] and 
+                            'type' in rule and (mime in rule['type'] or mime.split('/')[0] in rule['type'])):
+                        proxyLog(self, 'Matrix', 3, 'Response from "%s" with type "%s" %s' % (host, mime, 'accepted' if rule['allow'] else 'rejected'))
+                        return rule['allow']
 
         for precedence in range(len(netloc)):
             rule_host = '.'.join(netloc[precedence:])
@@ -208,6 +209,9 @@ class uProxy(HttpProxyNonTransparent):
                 if 'hostname' in rule and rule_host in rule['hostname'] and 'type' not in rule:
                     proxyLog(self, 'Matrix', 3, 'Response from "%s" with type "%s" %s' % (host, mime, 'accepted' if rule['allow'] else 'rejected'))
                     return rule['allow']
+
+        if mime == 'text/html':
+            return True
 
         for rule in uProxy._matrix['rules']:
             if ('hostname' not in rule and

@@ -19,7 +19,7 @@ An [example configuration](examples/policy_uProxy.py) is located in the examples
  * ```user_agent_interval```: The time for which a User-Agent is used for a client, after this, a new User-Agent is chosen
  * ```enable_matrix```: Enables the matrix filtering engine, described later
  * ```matrix_file```: The configuration of file of the matrix engine. You can use the [included converter](matrix2proxy) to convert existing uMatrix rules.
- * ```enable_abp```: Enables the partial Adblock Plus engine, described later
+ * ```enable_abp```: Enables the experimental and partial Adblock Plus engine, described later
  * ```abp_filter```: The Adblock Plus filter to use
 
 ## The matrix filtering engine

@@ -43,7 +43,7 @@ def readRules(fname):
                     unsupported_type[r_type] = 1
                 continue
 
-            result = {'allowed': r_decision == 'allow'}
+            result = {'allow': r_decision == 'allow'}
             if r_type != '*':
                 result['type'] = [SUPPORTED_TYPES[r_type]]
             if r_hostname != '*':
@@ -77,8 +77,7 @@ def main():
 
     fname_out = args.o or '{}.json'.format(fname_in)
     with open(fname_out, 'w') as f:
-        json.dump({'allowed': global_rules[0]['allowed'], 'rules': rules}, f,
-indent=True)
+        json.dump({'allow': global_rules[0]['allow'], 'rules': rules}, f, indent=True)
 
 
 if __name__ == '__main__':

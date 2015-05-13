@@ -49,3 +49,32 @@ The configuration is stored in a JSON object with two keys. The ```allow``` key 
 Each rule can have three keys. The ```hostname``` key stores a list of hostnames and the ```type``` key stores a list of types. At least one of these keys have to be present. The ```allow``` key stores the result of the rule.
 
 The [example matrix configuration](examples/matrix.json) blocks images and audio from example.com, blocks all cookies except from example.org, and allows everything else.
+
+## Adblock Plus engine
+The Adblock Plus filtering engine is still in a proof of concept state, since it's painfully slow with commonly used filters.
+### Unimplemented features
+#### Checksum calculation
+#### Type options
+The following types (and their inverse counterparts) are virtually impossible to implement for reasons discussed in the matrix filtering section:
+ * ```object```
+ * ```xmlhttprequest```
+ * ```object-subrequest```
+ * ```subdocument```
+ * ```elemhide```
+ * ```other```
+
+#### ```third-party``` and ```~third-party``` options
+For reasons described in the matrix filtering section, this won't be implemented.
+#### ```sitekey``` option
+#### ```collapse``` option
+#### ```donottrack``` option
+#### All element hiding rules
+Filtering arbitrary HTML content on a proxy isn't trivial, since any HTML code can be injected using JavaScript. Browser extensions can rely on the browsers engine to execute all JavaScript code before filtering HTML elements, but the same can't be done on a proxy.
+
+Consider the following code:
+```javascript
+document.write('<div class="annoying-ad">Nasty JavaScript ad</div>');
+```
+Blocking elements like that would require parsing the JavaScript code on the proxy. Keep in mind that the code injecting the HTML elements could be far more obfuscated.
+
+For this reason, element hiding rules are not implemented in the proxy, but since most sites use an easily recognizaable domain for serving ads, this is not that big of a deal.

@@ -2,8 +2,8 @@
 A content filtering proxy for [Zorp](https://github.com/balabit/zorp), implementing features from [uMatrix](https://github.com/gorhill/uMatrix) and [uBlock](https://github.com/gorhill/uBlock).
 ## Creating a container to test the proxy
 ### Requirements
- * LXC with the fedora template and its possible requirements
- * Linux >= 3.7, since the container is based on Fedora 21, which uses systemd
+ * [LXC](https://github.com/lxc/lxc)
+ * The kernel-related requirements of systemd described [here](http://cgit.freedesktop.org/systemd/systemd/tree/README), since the container uses Fedora 21
 
 ### Steps
  * Run ```create_vm``` as root

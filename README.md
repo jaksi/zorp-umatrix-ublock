@@ -41,7 +41,7 @@ In addition to the implemented rule types of uMatrix (cookie, css, image, script
 For example, ```application/xml``` will match on responses with that type, and ```audio``` will match on any resource with the top-level type of ```audio``` (```audio/opus```, ```audio/vorbis```, etc.).
 
 #### Multiple hostnames and types
-To configuration more similar to the visual representation of uMatrix and easier to modify, a rule can have multiple hostnames and types.
+To make the configuration more similar to the visual representation of uMatrix and easier to modify, a rule can have multiple hostnames and types.
 
 ### Matrix configuration
 The configuration is stored in a JSON object with two keys. The ```allow``` key represents the ```all``` cell of uMatrix, and the ```rules``` key stores the list of the actual rules.

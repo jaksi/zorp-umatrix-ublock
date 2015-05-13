@@ -2,26 +2,17 @@
     "allow": true,
     "rules": [
         {
-            "hostname": ["thumbs.redditmedia.com"],
-            "type": ["image"],
+            "hostname": ["example.com"],
+            "type": ["image", "audio"],
             "allow": false
         },
         {
-            "hostname": ["facebook.com"],
             "type": ["Cookie"],
             "allow": false
         },
         {
-            "hostname": ["googleadservices.com"],
-            "allow": false
-        },
-        {
-            "type": ["JavaScript"],
-            "allow": false
-        },
-        {
-            "hostname": ["youtube.com"],
-            "type": ["JavaScript"],
+            "hostname": ["example.org"],
+            "type": ["Cookie"],
             "allow": true
         }
     ]

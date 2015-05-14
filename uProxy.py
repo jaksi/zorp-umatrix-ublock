@@ -105,12 +105,11 @@ class uProxy(HttpProxyNonTransparent):
                     uProxy._abp_rules.append(
                         {
                             'allowed': allowed,
-                            'rule': rule,
+                            'rule': re.compile(rule, flags=re.IGNORECASE if not match_case else 0),
                             'types': types,
                             'not_types': not_types,
                             'domains': domains,
-                            'not_domains': not_domains,
-                            'match_case': match_case
+                            'not_domains': not_domains
                         }
                     )
         
@@ -266,14 +265,14 @@ class uProxy(HttpProxyNonTransparent):
 
         if uProxy.enable_abp:
             for rule in filter(lambda r: r['allowed'], uProxy._abp_rules):
-                if (re.search(rule['rule'], url, flags=re.IGNORECASE if not rule['match_case'] else '') and
+                if (rule['rule'].search(url) and
                         (not rule['types'] or mime in rule['types']) and (not rule['not_types'] or mime not in rule['not_types']) and
                         (not rule['domains'] or host in rule['domains']) and (not rule['not_domains'] or rule not in rule['not_domains'])):
                     proxyLog(self, 'ABP', 3, 'Response from %s whitelisted' % host)
                     return HTTP_RSP_ACCEPT
 
             for rule in filter(lambda r: not r['allowed'], uProxy._abp_rules):
-                if (re.search(rule['rule'], url, flags=re.IGNORECASE if not rule['match_case'] else '') and
+                if (rule['rule'].search(url) and
                         (not rule['types'] or mime in rule['types']) and (not rule['not_types'] or mime not in rule['not_types']) and
                         (not rule['domains'] or host in rule['domains']) and (not rule['not_domains'] or rule not in rule['not_domains'])):
                     proxyLog(self, 'ABP', 3, 'Response from %s blacklisted' % host)
